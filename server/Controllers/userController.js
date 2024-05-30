@@ -21,10 +21,10 @@ const registerUser = async (req, res) => {
         if(!name || !email || !password) 
             return res.status(400).json("All fields are required...")
 
-        if(!validator.usEmail(email)) 
+        if(!validator.isEmail(email))
             return res.status(400).json("Email must be a valid email...")
 
-        if(!validatior.isStrongPassword(password))
+        if(!validator.isStrongPassword(password))
             return res.status(400).json("Password must be a strong password...")
 
             user = new userModel({name, email, password})
@@ -40,6 +40,27 @@ const registerUser = async (req, res) => {
     } catch(error) {
         console.log(error)
         res.status(500).json(error)
+    }
+}
+
+const loginUser = async(req, res) => {
+    const {email, password} = req.body;
+
+    try {
+        let user = await userModel.findOne({ email })
+
+        if(!user) return res.status(400).json("Invalid email or password...")
+        
+        const isValidPassword = await bcrypt.compare(password, user.password)
+
+        if(!isValidPassword) 
+            return res.status(400).json("Invalid email or password...")
+
+        const token = createToken(user._id)
+
+        res.status(200).json({_id: user._id, name: user.name, email, token})
+    } catch(error) {
+
     }
 }
 
